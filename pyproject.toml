@@ -2,26 +2,19 @@
 name = "agents_from_scratch"
 version = "0.1.0"
 description = "Build an e-mail assistant from scratch"
-requires-python = ">=3.11,<3.14"
+requires-python = ">=3.10,<3.14"
 dependencies = [
     "langchain>=1.0.0",
     "langchain-core>=1.0.0",
     "langchain-google-genai>=1.0.0",
     "langgraph>=1.0.0",
-    "langsmith[pytest]>=0.4.37",
-    "pandas",
-    "matplotlib",
-    "pytest",
-    "pytest-xdist",
-    "jupyter>=1.0.0",
-    "langgraph-cli[inmem]>=0.4.0",
     "google-api-python-client>=2.128.0",
     "google-auth-oauthlib",
     "google-auth-httplib2",
     "python-dotenv",
-    "pyppeteer",
-    "html2text",
     "rich",
+    "dateutil",
+    "html2text",
 ]
 
 [project.optional-dependencies]

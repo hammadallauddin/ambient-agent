@@ -1,6 +1,6 @@
-from typing import List, Any
 import json
 import html2text
+
 
 def format_email_markdown(subject, author, to, email_thread, email_id=None):
     """Format email details into a nicely formatted markdown string for display
@@ -24,6 +24,7 @@ def format_email_markdown(subject, author, to, email_thread, email_id=None):
 
 ---
 """
+
 
 def format_gmail_markdown(subject, author, to, email_thread, email_id=None):
     """Format Gmail email details into a nicely formatted markdown string for display,
@@ -59,6 +60,7 @@ def format_gmail_markdown(subject, author, to, email_thread, email_id=None):
 
 ---
 """
+
 
 def format_for_display(tool_call):
     """Format content for display in Agent Inbox
@@ -105,7 +107,8 @@ Arguments:"""
             display += f"\n{tool_call['args']}\n"
     return display
 
-def parse_email(email_input: dict) -> dict:
+
+def parse_email(email_input: dict):
     """Parse an email input dictionary.
 
     Args:
@@ -129,7 +132,8 @@ def parse_email(email_input: dict) -> dict:
         email_input["email_thread"],
     )
 
-def parse_gmail(email_input: dict) -> tuple[str, str, str, str, str]:
+
+def parse_gmail(email_input: dict):
     """Parse an email input dictionary for Gmail, including the email ID.
     
     This function extends parse_email by also returning the email ID,
@@ -138,11 +142,11 @@ def parse_gmail(email_input: dict) -> tuple[str, str, str, str, str]:
     Args:
         email_input (dict): Dictionary containing email fields in any of these formats:
             Gmail schema:
-                - From: Sender's email
-                - To: Recipient's email
-                - Subject: Email subject line
-                - Body: Full email content
-                - Id: Gmail message ID
+                - from: Sender's email
+                - to: Recipient's email
+                - subject: Email subject line
+                - body: Full email content
+                - id: Gmail message ID
             
     Returns:
         tuple[str, str, str, str, str]: Tuple containing:
@@ -152,11 +156,6 @@ def parse_gmail(email_input: dict) -> tuple[str, str, str, str, str]:
             - email_thread: Full email content
             - email_id: Email ID (or None if not available)
     """
-
-    print("!Email_input from Gmail!")
-    print(email_input)
-
-    # Gmail schema
     return (
         email_input["from"],
         email_input["to"],
@@ -164,72 +163,9 @@ def parse_gmail(email_input: dict) -> tuple[str, str, str, str, str]:
         email_input["body"],
         email_input["id"],
     )
-    
-def extract_message_content(message) -> str:
-    """Extract content from different message types as clean string.
-    
-    Args:
-        message: A message object (HumanMessage, AIMessage, ToolMessage)
-        
-    Returns:
-        str: Extracted content as clean string
-    """
-    content = message.content
-    
-    # Check for recursion marker in string
-    if isinstance(content, str) and '<Recursion on AIMessage with id=' in content:
-        return "[Recursive content]"
-    
-    # Handle string content
-    if isinstance(content, str):
-        return content
-        
-    # Handle list content (AIMessage format)
-    elif isinstance(content, list):
-        text_parts = []
-        for item in content:
-            if isinstance(item, dict) and 'text' in item:
-                text_parts.append(item['text'])
-        return "\n".join(text_parts)
-    
-    # Don't try to handle recursion to avoid infinite loops
-    # Just return string representation instead
-    return str(content)
 
-def format_few_shot_examples(examples):
-    """Format examples into a readable string representation.
 
-    Args:
-        examples (List[Item]): List of example items from the vector store, where each item
-            contains a value string with the format:
-            'Email: {...} Original routing: {...} Correct routing: {...}'
-
-    Returns:
-        str: A formatted string containing all examples, with each example formatted as:
-            Example:
-            Email: {email_details}
-            Original Classification: {original_routing}
-            Correct Classification: {correct_routing}
-            ---
-    """
-    formatted = []
-    for example in examples:
-        # Parse the example value string into components
-        email_part = example.value.split('Original routing:')[0].strip()
-        original_routing = example.value.split('Original routing:')[1].split('Correct routing:')[0].strip()
-        correct_routing = example.value.split('Correct routing:')[1].strip()
-        
-        # Format into clean string
-        formatted_example = f"""Example:
-Email: {email_part}
-Original Classification: {original_routing}
-Correct Classification: {correct_routing}
----"""
-        formatted.append(formatted_example)
-    
-    return "\n".join(formatted)
-
-def extract_tool_calls(messages: List[Any]) -> List[str]:
+def extract_tool_calls(messages):
     """Extract tool call names from messages, safely handling messages without tool_calls."""
     tool_call_names = []
     for message in messages:
@@ -242,25 +178,7 @@ def extract_tool_calls(messages: List[Any]) -> List[str]:
     
     return tool_call_names
 
-def format_messages_string(messages: List[Any]) -> str:
+
+def format_messages_string(messages):
     """Format messages into a single string for analysis."""
     return '\n'.join(message.pretty_repr() for message in messages)
-
-def show_graph(graph, xray=False):
-    """Display a LangGraph mermaid diagram with fallback rendering.
-    
-    Handles timeout errors from mermaid.ink by falling back to pyppeteer.
-    
-    Args:
-        graph: The LangGraph object that has a get_graph() method
-    """
-    from IPython.display import Image
-    try:
-        # Try the default renderer first
-        return Image(graph.get_graph(xray=xray).draw_mermaid_png())
-    except Exception as e:
-        # Fall back to pyppeteer if the default renderer fails
-        import nest_asyncio
-        nest_asyncio.apply()
-        from langchain_core.runnables.graph import MermaidDrawMethod
-        return Image(graph.get_graph().draw_mermaid_png(draw_method=MermaidDrawMethod.PYPPETEER))
