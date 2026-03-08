@@ -172,4 +172,3 @@ Add [LangMem](https://langchain-ai.github.io/langmem/) to manage memories:
 
 
 
-# ambient-agent
