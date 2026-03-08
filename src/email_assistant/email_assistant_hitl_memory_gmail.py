@@ -21,11 +21,11 @@ tools = get_tools(["send_email_tool", "schedule_meeting_tool", "check_calendar_t
 tools_by_name = get_tools_by_name(tools)
 
 # Initialize the LLM for use with router / structured output
-llm = init_chat_model("google-genai:gemini-2.0-flash", temperature=0.0)
+llm = init_chat_model(model="gemini-2.0-flash", model_provider="google_genai", temperature=0.0)
 llm_router = llm.with_structured_output(RouterSchema) 
 
 # Initialize the LLM, enforcing tool use (of any available tools) for agent
-llm = init_chat_model("google-genai:gemini-2.0-flash", temperature=0.0)
+llm = init_chat_model(model="gemini-2.0-flash", model_provider="google_genai", temperature=0.0)
 llm_with_tools = llm.bind_tools(tools, tool_choice="required")
 
 def get_memory(store, namespace, default_content=None):
@@ -67,7 +67,7 @@ def update_memory(store, namespace, messages):
     # Get the existing memory
     user_preferences = store.get(namespace, "user_preferences")
     # Update the memory
-    llm = init_chat_model("google-genai:gemini-2.0-flash", temperature=0.0).with_structured_output(UserPreferences)
+    llm = init_chat_model(model="gemini-2.0-flash", model_provider="google_genai", temperature=0.0).with_structured_output(UserPreferences)
     result = llm.invoke(
         [
             {"role": "system", "content": MEMORY_UPDATE_INSTRUCTIONS.format(current_profile=user_preferences.value, namespace=namespace)},
