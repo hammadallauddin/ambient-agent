@@ -25,6 +25,7 @@ ambient-agent/
 │   ├── test_email_assistant.py               # Email assistant tests
 │   ├── test_final_verification.py            # Final verification tests
 │   ├── test_gemini_25_flash.py               # Gemini model tests
+│   ├── test_no_gmail.py                      # No Gmail dependencies tests
 │   ├── test_simple_triage.py                 # Simple triage tests
 │   ├── test_with_api_key.py                  # API key tests
 │   ├── test_with_store.py                    # Memory store tests
@@ -91,3 +92,23 @@ python -m pytest tests/
 - Google API Key
 - LangSmith API Key (optional for tracing)
 - Gmail API credentials (for Gmail integration)
+
+## Security & Best Practices
+
+### Environment Variables
+All sensitive configuration is stored in environment variables:
+- **No hardcoded API keys** in source code
+- **Secure credential management** via `.env` files
+- **Easy model switching** with `GOOGLE_MODEL` environment variable
+
+### Project Structure
+- **Clean separation** of source code and tests
+- **Organized tool implementations** in dedicated directories
+- **Comprehensive test coverage** for all components
+
+### Recent Improvements
+- ✅ **Removed hardcoded secrets** from all source files
+- ✅ **Reorganized project structure** for better maintainability
+- ✅ **Added comprehensive test suite** in proper directory
+- ✅ **Environment variable configuration** for all sensitive data
+- ✅ **Secure codebase** with no hardcoded API keys or credentials
