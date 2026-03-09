@@ -1,9 +1,11 @@
 from typing import Literal
+import os
 
 from langchain.chat_models import init_chat_model
 
 from langgraph.graph import StateGraph, START, END
 from langgraph.store.base import BaseStore
+from langgraph.store.memory import InMemoryStore
 from langgraph.types import interrupt, Command
 
 from email_assistant.tools import get_tools, get_tools_by_name
@@ -21,11 +23,11 @@ tools = get_tools(["send_email_tool", "schedule_meeting_tool", "check_calendar_t
 tools_by_name = get_tools_by_name(tools)
 
 # Initialize the LLM for use with router / structured output
-llm = init_chat_model(model="gemini-2.0-flash", model_provider="google_genai", temperature=0.0)
+llm = init_chat_model(model=os.getenv("GOOGLE_MODEL", "gemini-2.5-flash"), model_provider="google_genai", temperature=0.0)
 llm_router = llm.with_structured_output(RouterSchema) 
 
 # Initialize the LLM, enforcing tool use (of any available tools) for agent
-llm = init_chat_model(model="gemini-2.0-flash", model_provider="google_genai", temperature=0.0)
+llm = init_chat_model(model=os.getenv("GOOGLE_MODEL", "gemini-2.5-flash"), model_provider="google_genai", temperature=0.0)
 llm_with_tools = llm.bind_tools(tools, tool_choice="required")
 
 def get_memory(store, namespace, default_content=None):
@@ -39,6 +41,10 @@ def get_memory(store, namespace, default_content=None):
     Returns:
         str: The content of the memory profile, either from existing memory or the default
     """
+    # Safety check for None store
+    if store is None:
+        return default_content
+    
     # Search for existing memory with namespace and key
     user_preferences = store.get(namespace, "user_preferences")
     
@@ -53,7 +59,7 @@ def get_memory(store, namespace, default_content=None):
         user_preferences = default_content
     
     # Return the default content
-    return user_preferences 
+    return user_preferences
 
 def update_memory(store, namespace, messages):
     """Update memory profile in the store.
@@ -67,7 +73,7 @@ def update_memory(store, namespace, messages):
     # Get the existing memory
     user_preferences = store.get(namespace, "user_preferences")
     # Update the memory
-    llm = init_chat_model(model="gemini-2.0-flash", model_provider="google_genai", temperature=0.0).with_structured_output(UserPreferences)
+    llm = init_chat_model(model=os.getenv("GOOGLE_MODEL", "gemini-2.5-flash"), model_provider="google_genai", temperature=0.0).with_structured_output(UserPreferences)
     result = llm.invoke(
         [
             {"role": "system", "content": MEMORY_UPDATE_INSTRUCTIONS.format(current_profile=user_preferences.value, namespace=namespace)},
@@ -508,4 +514,7 @@ overall_workflow = (
     .add_edge("mark_as_read_node", END)
 )
 
-email_assistant = overall_workflow.compile()
+# Compile the workflow with a checkpointer to enable memory store functionality
+from langgraph.checkpoint.memory import MemorySaver
+checkpointer = MemorySaver()
+email_assistant = overall_workflow.compile(checkpointer=checkpointer, store=InMemoryStore())

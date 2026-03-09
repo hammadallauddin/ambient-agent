@@ -1,121 +1,93 @@
-# Email Assistant
+# Ambient Agent
 
-An ambient AI agent that manages your email with Gmail integration, human-in-the-loop (HITL) review, and memory capabilities.
-
-## Features
-
-- **Email Triage**: Automatically classifies emails as respond, ignore, or notify
-- **Human-in-the-Loop**: Review and edit AI-drafted emails before sending
-- **Memory**: Learns from your feedback to improve over time
-- **Gmail Integration**: Connects directly to Gmail API
-- **Calendar Integration**: Schedules meetings via Google Calendar
-
-## Quick Start
-
-### 1. Install Dependencies
-
-```bash
-# Using uv (recommended)
-pip install uv
-uv sync
-
-# Or using pip
-pip install -e .
-```
-
-### 2. Set Up Environment Variables
-
-Create a `.env` file:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with your API keys:
-
-```bash
-GOOGLE_API_KEY=your_google_genai_key
-```
-
-### 3. Run the Agent
-
-```bash
-# Start LangGraph server
-langgraph dev
-
-# Or run directly with Python
-python -c "from email_assistant.email_assistant_hitl_memory_gmail import email_assistant; print(email_assistant)"
-```
+An intelligent email assistant built with LangGraph that uses AI to triage and respond to emails with human-in-the-loop capabilities.
 
 ## Project Structure
 
 ```
-src/email_assistant/
-├── email_assistant_hitl_memory_gmail.py  # Main agent with Gmail + HITL + Memory
-├── cron.py                                # Cron job for email ingestion
-├── prompts.py                             # System prompts
-├── schemas.py                             # Data schemas
-├── utils.py                              # Utility functions
-└── tools/
-    ├── base.py                          # Tool factory
-    ├── default/                         # Default email/calendar tools
-    └── gmail/                          # Gmail API integration
-        ├── gmail_tools.py              # Gmail API tools
-        ├── run_ingest.py              # Email ingestion script
-        ├── setup_gmail.py             # Gmail OAuth setup
-        └── setup_cron.py              # Cron job setup
+ambient-agent/
+├── src/
+│   └── email_assistant/
+│       ├── __init__.py
+│       ├── email_assistant_hitl_memory_gmail.py  # Main email assistant workflow
+│       ├── prompts.py                           # System prompts and instructions
+│       ├── schemas.py                          # Data schemas and types
+│       ├── utils.py                            # Utility functions
+│       ├── cron.py                            # Cron job setup
+│       └── tools/                             # Tool implementations
+│           ├── __init__.py
+│           ├── base.py                        # Base tool classes
+│           ├── default/                       # Default tool implementations
+│           └── gmail/                         # Gmail-specific tools
+├── tests/                                     # Test files
+│   ├── test_basic_functionality.py           # Basic functionality tests
+│   ├── test_components.py                    # Component tests
+│   ├── test_email_assistant.py               # Email assistant tests
+│   ├── test_final_verification.py            # Final verification tests
+│   ├── test_gemini_25_flash.py               # Gemini model tests
+│   ├── test_simple_triage.py                 # Simple triage tests
+│   ├── test_with_api_key.py                  # API key tests
+│   ├── test_with_store.py                    # Memory store tests
+│   ├── test_workflow_mock.py                 # Workflow mock tests
+│   └── test_working_version.py               # Working version tests
+├── .env.example                              # Environment variables template
+├── .env                                      # Environment variables
+├── pyproject.toml                           # Project configuration
+└── README.md                                # This file
 ```
 
-## Usage Examples
+## Features
 
-### Using with Gmail
-
-1. Set up Gmail credentials:
-
-```bash
-python src/email_assistant/tools/gmail/setup_gmail.py
-```
-
-2. Run email ingestion:
-
-```bash
-python src/email_assistant/tools/gmail/run_ingest.py --email your@email.com --minutes-since 60
-```
-
-### Running with Agent Inbox
-
-For human-in-the-loop review:
-
-1. Start LangGraph server: `langgraph dev`
-2. Access Agent Inbox at https://dev.agentinbox.ai
-3. Configure your deployment URL and graph name
+- **Email Triage**: Automatically classify emails as respond, ignore, or notify
+- **Human-in-the-Loop**: Review and edit AI-generated responses before sending
+- **Memory Management**: Learn from user preferences and feedback
+- **Gmail Integration**: Full Gmail API integration for email operations
+- **Calendar Integration**: Schedule meetings and check availability
 
 ## Configuration
 
-The agent uses Gemini 2.0 Flash by default. You can modify the model in `email_assistant_hitl_memory_gmail.py`:
-
-```python
-llm = init_chat_model(model="gemini-2.0-flash", model_provider="google_genai", temperature=0.0)
-```
-
-## Deployment
-
-Deploy to LangGraph Platform:
+Copy `.env.example` to `.env` and configure the following environment variables:
 
 ```bash
-langgraph deploy
+GOOGLE_API_KEY=your_api_key
+LANGSMITH_TRACING=true
+LANGSMITH_API_KEY=your_langsmith_api_key
+LANGSMITH_PROJECT="ambient-agent"
+GOOGLE_MODEL=gemini-2.5-flash
 ```
 
-See `src/email_assistant/tools/gmail/README.md` for detailed deployment instructions.
+## Usage
 
-## Dependencies
+```python
+from email_assistant.email_assistant_hitl_memory_gmail import email_assistant
+from langgraph.store.memory import InMemoryStore
 
-- langchain >= 1.0.0
-- langchain-core >= 1.0.0
-- langchain-google-genai >= 1.0.0
-- langgraph >= 1.0.0
-- google-api-python-client >= 2.128.0
-- python-dotenv
-- rich
-- dateutil
-- html2text
+# Create a store for memory
+store = InMemoryStore()
+
+# Process an email
+result = email_assistant.invoke({
+    "email_input": {
+        "from": "sender@example.com",
+        "to": "recipient@example.com",
+        "subject": "Meeting Request",
+        "body": "Can we meet tomorrow?",
+        "id": "email_id_123"
+    }
+}, config={"configurable": {"thread_id": "thread_123"}}, store=store)
+```
+
+## Testing
+
+Run the test suite:
+
+```bash
+python -m pytest tests/
+```
+
+## Requirements
+
+- Python 3.10+
+- Google API Key
+- LangSmith API Key (optional for tracing)
+- Gmail API credentials (for Gmail integration)
